@@ -1,0 +1,241 @@
+---
+title: "Urban Population Percent Data Analysis"
+author: "Abdulrahman Azizi, Jack Saunders, Miles Begley, Roshni Patel"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    number_sections: yes    
+    toc: yes
+---
+
+
+Make sure to note that we are using two datasets, 
+Our primary dataset is https://www.kaggle.com/datasets/equinxx/urban-population-19602021-by-country
+
+Our secondary dataset (used for question 2 alongside the primary dataset) is  https://www.kaggle.com/datasets/frankmollard/income-by-country?resource=download
+
+#Dataset Installation
+
+```{r}
+
+
+#We will use these two file locations throughout the code, make sure to run this first!
+pop_data <- "https://raw.githubusercontent.com/Hyperian1/RStudio-final-project/c1cac690a144452f1fccb0855fdc91fbe1e962cd/urban_percent.csv?token=GHSAT0AAAAAABTYNPX5DZYI6J42BHT5PNCGYTRUMKA"  
+income_data <- "https://raw.githubusercontent.com/Hyperian1/RStudio-final-project/main/GDP_per_capita.csv?token=GHSAT0AAAAAABTYNPX5HMRLXFLRQ2PPRDOCYTRULMA"
+
+
+```
+
+#Analysis of Average Urban Population % Over Time
+
+
+
+
+```{r}
+#This section is used to analyze average urban population % over time
+
+
+
+percents <- read.csv(pop_data)
+
+#clean up data file
+
+#eliminate any grouping of countries to focus on individual country values
+#(ex. removing data for "high income countries") and eliminate any country without a full set of data
+percents <- percents[c(-2,-4,-35,-37,-50,-62:-66,-70,-74,-98,-104:-107,-111, -128,-134:-136,
+                       -139,-140,-142,-153,-161,-181,-183,-191,-215,-217,-218,-230,-231,
+                       -236,-238,-241,-249,-262,-148),]  
+percents <- percents[,c(-66)] #unneeded final column removed
+
+#size of data set
+l <- ncol(percents)
+
+#calculate average percentage each year
+avg_percent <- vector()
+year <- vector ()
+
+for (i in 5:l){
+  year[i-4] <- 1960 + (i-5)
+  year_data <- percents[,c(i)]
+  avg_percent[i-4] <- mean(year_data)
+}
+
+#Plot Averages
+plot(x=year, y= avg_percent, main= "Average Global Urban Population Pecentage Over Time" 
+     ,xlab= "Year", ylab= "Urban Population Percentage")
+
+#Correlation Between Time and Urban Percentage
+cor_avg<- cor(year,avg_percent)
+cat(sprintf('The correlation between time and urban population percentage is: %s',cor_avg))
+#Note the correlation is nearly 1 indicating a strong linear relationship
+
+```
+
+
+
+
+#Comparison of Income to Urban Population % in Different Years
+
+
+
+```{r}
+#This section is used to compare income vs. urban population % of different regions in different years
+  #Specifically 1990, 2000, 2010
+  #Regions include Arab States, East Asia and the Pacific, Europe and Central Asia, Latin America and the       
+  #Caribbean, South Asia, and Sub-Saharan Africa
+
+#import income and urban pop % data
+ 
+income <- read.csv(income_data)
+percents2 <-read.csv(pop_data)
+
+#clean up data file
+  #include only regional information 
+  #this was done as not all the countries were the same in each data set but the regions were
+income <- income[c(200:205),] 
+percents2 <- percents2[c(8,64,66,135,205,218), ]
+
+#Data for 1990
+income1990 <- as.numeric(income[,2])
+percent1990 <- percents2[,35]
+
+#Data for 2000
+income2000 <- as.numeric(income[,4])
+percent2000 <- percents2[,45]
+
+#Data for 2010
+income2010 <- as.numeric(income[,6])
+percent2010 <- percents2[,55]
+
+#Plot Data
+plot(y=percent2010, x=income2010, col='red',
+     main= "GDP Per Capita vs Urban Pop. % for Different Regions from 1990 to 2010", 
+     xlab= "Per Capita GDP ($)", xlim=c(2000,16000), ylim=c(20,90), ylab= "Urban Population Percentage")
+abline(lm(percent2010 ~ income2010), col = "red") #line of best fit for 2010
+
+points(income1990, percent1990, col='blue')
+abline(lm(percent1990 ~ income1990), col = "blue") #line of best fit for 1990
+
+points(income2000,percent2000, col='green')
+abline(lm(percent2000 ~ income2000), col = "green") #line of best fit for 2000
+
+legend(2000, 90, legend=c('1990', '2000', '2010'), pch=c(19, 19), col=c('blue', 'green', 'red'))
+
+#Correlation Calculations
+cor1990 <- cor(percent1990,income1990)
+cor2000 <- cor(percent2000,income2000)
+cor2010 <- cor(percent2010,income2010)
+
+  #all data
+totpercent<- c(percent1990, percent2000, percent2010)
+totincome <- c(income1990, income2000, income2010)
+cortot <- cor(totpercent,totincome)
+
+income_correlations <- c(cor1990,cor2000, cor2010, cortot)
+
+cat(sprintf('The correlation for each year is as follows: \n 1990: %s \n 2000:%s \n 2010: %s \n All data: %s',income_correlations[1],income_correlations[2],income_correlations[3],income_correlations[4]))
+#correlations indicate that there is a positive relationship between gdp per capital and urban pop %
+
+
+```
+
+
+#Analysis 3, Urban Population Percentages Comparison Between the United States, China, and India
+
+##General Urban Population Percentages of the United States, China, and India
+ 
+
+```{r}
+
+
+
+percents <- read.csv(pop_data)
+
+
+
+#clean up data file
+percents <- percents[c(252,41,110),] #We selected the USA, China, and India
+
+percents <- percents[,c(-2,-3,-4,-66)] #unneeded final column removed and first 4 columns with unplottable data
+#size of data set
+l <- ncol(percents)
+n <- nrow(percents)
+head(percents)
+
+
+
+
+for(j in 1:n){
+  
+  year <- vector ()
+  year_data <- vector()
+for (i in 1:l-1){
+  
+  year[i] <- 1960 + (i-1) #remember i-1 * 5
+  year_data[i] <- percents[j,c(i+1)]  #j represents the country, and c(i+1) represents the current year, we increment by 1 because the first column in the file is the name
+}
+if(j == 1){
+plot(x=year, y=year_data, type = "l",
+     main= "Urban Population Percentages between US, China, and India" 
+     , col = "blue"
+     , xlim = c(1960,2020)
+     , ylim = c(10,90)
+     , xlab= "Year", ylab= "Urban Population Percentage") #graph USA
+  legend(1960, 60, legend=c('USA', 'China', 'India'), pch=c(19, 19), col=c('blue', 'red', 'green'))            
+}else if(j == 2){
+  lines(x =year,y =year_data, type = "l", col = "red") #graph China
+} else{
+  lines(x=year,y=year_data, type = "l",col = "green") #graph India
+}
+
+}
+```
+
+##Urban Population Percentages Increase Rate of the United States, China, and India
+
+For question 3 part B we are comparing Urban Population Percentages Increase Rate between the United States, China, and India
+
+```{r}
+#Now to graph percent increase
+
+for(j in 1:n){
+
+  year <- vector ()
+  year_data <- vector()
+  
+for (i in 1:l-1){
+
+  year[i] <- 1960 + (i-1) #remember i-1 * 5
+  if(i == 1){
+    year_data[i] <- 0
+  } else{
+    
+  year_data[i] <- percents[j,c(i+1)] - percents[j,c(i)] #subtract previous year data from this one
+  }
+}
+if(j == 1){
+plot(x=year, y=year_data, type = "l",
+     main= "Urban Population Percentages Increase Rate" 
+     , col = "blue"
+     , xlim = c(1960,2020)
+     , ylim = c(-.5,1.5)
+     , xlab= "Year", ylab= "Urban Population Percentage") #graph USA
+  legend(1960, 1.5, legend=c('USA', 'China', 'India'), pch=c(19, 19), col=c('blue', 'red', 'green'))            
+}else if(j == 2){
+  lines(x =year,y =year_data, type = "l", col = "red") #graph China
+} else{
+  lines(x=year,y=year_data, type = "l",col = "green") #graph India
+}
+
+}
+
+#Possible observations:
+#Even though the US is much higher in actual percentage, China beats the US in percent increase every year. Note that the graph is PER year, and some years the percent increase is negative!
+
+
+
+```
+
+
+
